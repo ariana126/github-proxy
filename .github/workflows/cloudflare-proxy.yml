@@ -1,0 +1,49 @@
+name: Cloudflare SOCKS5 Proxy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  proxy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl wget
+
+      - name: Install Dante SOCKS5 server
+        run: |
+          sudo apt-get install -y dante-server
+
+      - name: Configure SOCKS5
+        run: |
+          sudo bash -c 'cat > /etc/danted.conf <<EOF
+          logoutput: stderr
+          internal: 0.0.0.0 port = 1080
+          external: eth0
+          method: none
+          user.notprivileged: nobody
+          client pass {
+              from: 0.0.0.0/0 to: 0.0.0.0/0
+          }
+          socks pass {
+              from: 0.0.0.0/0 to: 0.0.0.0/0
+          }
+          EOF'
+
+      - name: Start SOCKS5 server
+        run: |
+          sudo service danted start
+          sleep 3
+
+      - name: Install cloudflared
+        run: |
+          wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+          chmod +x cloudflared-linux-amd64
+          sudo mv cloudflared-linux-amd64 /usr/local/bin/cloudflared
+
+      - name: Start Cloudflare tunnel
+        run: |
+          cloudflared tunnel --url tcp://localhost:1080 --no-autoupdate
