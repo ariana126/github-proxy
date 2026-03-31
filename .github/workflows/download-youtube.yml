@@ -15,7 +15,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg zip nodejs
+          sudo apt-get install -y ffmpeg nodejs
           python3 -m pip install --upgrade pip
           pip install -U yt-dlp
 
@@ -23,22 +23,19 @@ jobs:
         run: |
           echo "${{ secrets.YT_COOKIES }}" > cookies.txt
 
-      - name: Download video
+      - name: Download video (MP4)
         run: |
           yt-dlp \
             --cookies cookies.txt \
             --js-runtimes node \
             --remote-components ejs:github \
             -f "bv*+ba/b" \
+            --merge-output-format mp4 \
             -o "video.%(ext)s" \
             "${{ github.event.inputs.youtube_url }}"
 
-      - name: Zip video
-        run: |
-          zip video.zip video.*
-
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: youtube-video
-          path: video.zip
+          path: video.mp4
