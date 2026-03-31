@@ -28,7 +28,7 @@ jobs:
           yt-dlp \
             --cookies cookies.txt \
             --js-runtimes node \
-            --extractor-args "youtube:player_client=android,tv" \
+            --remote-components ejs:github \
             -f "bv*+ba/b" \
             -o "video.%(ext)s" \
             "${{ github.event.inputs.youtube_url }}"
