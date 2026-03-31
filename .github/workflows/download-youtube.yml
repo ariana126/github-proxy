@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       youtube_url:
-        description: "YouTube video URL"
+        description: "YouTube URL"
         required: true
 
 jobs:
@@ -15,9 +15,9 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg zip
+          sudo apt-get install -y ffmpeg zip nodejs
           python3 -m pip install --upgrade pip
-          pip install yt-dlp
+          pip install -U yt-dlp
 
       - name: Write cookies
         run: |
@@ -27,6 +27,9 @@ jobs:
         run: |
           yt-dlp \
             --cookies cookies.txt \
+            --js-runtimes node \
+            --extractor-args "youtube:player_client=android,tv" \
+            -f "bv*+ba/b" \
             -o "video.%(ext)s" \
             "${{ github.event.inputs.youtube_url }}"
 
