@@ -15,14 +15,18 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y nodejs ffmpeg zip
+          sudo apt-get install -y ffmpeg zip
           python3 -m pip install --upgrade pip
           pip install yt-dlp
+
+      - name: Write cookies
+        run: |
+          echo "${{ secrets.YT_COOKIES }}" > cookies.txt
 
       - name: Download video
         run: |
           yt-dlp \
-            --extractor-args "youtube:player_client=android" \
+            --cookies cookies.txt \
             -o "video.%(ext)s" \
             "${{ github.event.inputs.youtube_url }}"
 
