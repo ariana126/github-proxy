@@ -1,4 +1,4 @@
-name: Cloudflare SOCKS5 Proxy
+name: Cloudflare HTTP Proxy
 
 on:
   workflow_dispatch:
@@ -9,31 +9,20 @@ jobs:
     timeout-minutes: 360
 
     steps:
-      - name: Install dependencies
+      - name: Install tinyproxy
         run: |
           sudo apt-get update
-          sudo apt-get install -y dante-server wget curl
+          sudo apt-get install -y tinyproxy wget curl
 
-      - name: Configure SOCKS5
+      - name: Configure tinyproxy
         run: |
-          sudo bash -c 'cat > /etc/danted.conf <<EOF
-          logoutput: stderr
-          internal: 0.0.0.0 port = 1080
-          external: eth0
-          method: none
-          user.notprivileged: nobody
-          client pass {
-              from: 0.0.0.0/0 to: 0.0.0.0/0
-          }
-          socks pass {
-              from: 0.0.0.0/0 to: 0.0.0.0/0
-          }
-          EOF'
+          sudo sed -i 's/^Allow/#Allow/g' /etc/tinyproxy/tinyproxy.conf
+          sudo sed -i 's/^#Port 8888/Port 8888/' /etc/tinyproxy/tinyproxy.conf
 
-      - name: Start SOCKS5 server
+      - name: Start proxy
         run: |
-          sudo service danted start
-          sleep 3
+          sudo service tinyproxy start
+          sleep 2
 
       - name: Install cloudflared
         run: |
@@ -41,12 +30,12 @@ jobs:
           chmod +x cloudflared-linux-amd64
           sudo mv cloudflared-linux-amd64 /usr/local/bin/cloudflared
 
-      - name: Start tunnel
+      - name: Start Cloudflare tunnel
         run: |
-          cloudflared tunnel --url tcp://localhost:1080 --protocol http2 > tunnel.log 2>&1 &
-          sleep 10
+          cloudflared tunnel --url http://localhost:8888 > tunnel.log 2>&1 &
+          sleep 8
 
-          echo "Proxy endpoint:"
-          grep -Eo 'tcp://[^ ]+' tunnel.log || echo "Check tunnel.log"
+          echo "Public Proxy URL:"
+          grep -Eo 'https://[-a-zA-Z0-9]+\.trycloudflare\.com' tunnel.log
 
           tail -f tunnel.log
