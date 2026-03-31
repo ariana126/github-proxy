@@ -6,16 +6,13 @@ on:
 jobs:
   proxy:
     runs-on: ubuntu-latest
+    timeout-minutes: 360
 
     steps:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y curl wget
-
-      - name: Install Dante SOCKS5 server
-        run: |
-          sudo apt-get install -y dante-server
+          sudo apt-get install -y dante-server wget curl
 
       - name: Configure SOCKS5
         run: |
@@ -44,6 +41,12 @@ jobs:
           chmod +x cloudflared-linux-amd64
           sudo mv cloudflared-linux-amd64 /usr/local/bin/cloudflared
 
-      - name: Start Cloudflare tunnel
+      - name: Start tunnel
         run: |
-          cloudflared tunnel --url tcp://localhost:1080 --no-autoupdate
+          cloudflared tunnel --url tcp://localhost:1080 --protocol http2 > tunnel.log 2>&1 &
+          sleep 10
+
+          echo "Proxy endpoint:"
+          grep -Eo 'tcp://[^ ]+' tunnel.log || echo "Check tunnel.log"
+
+          tail -f tunnel.log
