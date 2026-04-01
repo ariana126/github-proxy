@@ -1,0 +1,41 @@
+name: Download file
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "File URL"
+        required: true
+
+jobs:
+  download_and_upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install aria2
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y aria2
+
+      - name: Determine filename
+        id: file
+        run: |
+          URL="${{ inputs.url }}"
+          FILE=$(basename "${URL%%\?*}")
+          echo "filename=$FILE" >> $GITHUB_OUTPUT
+
+      - name: Download file with progress
+        run: |
+          aria2c \
+            --summary-interval=5 \
+            --file-allocation=none \
+            -x16 -s16 -k1M \
+            --console-log-level=warn \
+            -o "${{ steps.file.outputs.filename }}" \
+            "${{ inputs.url }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ steps.file.outputs.filename }}
+          path: ${{ steps.file.outputs.filename }}
