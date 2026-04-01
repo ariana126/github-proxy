@@ -6,10 +6,17 @@ on:
       url:
         description: "File URL"
         required: true
+        type: string
+      release_name:
+        description: "title"
+        required: true
+        type: string
 
 jobs:
   download_and_upload:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Install aria2
@@ -32,8 +39,9 @@ jobs:
           FILE=$(ls -t | head -n1)
           echo "filename=$FILE" >> $GITHUB_OUTPUT
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v6
+      - name: Create release
+        uses: softprops/action-gh-release@v2
         with:
-          name: ${{ steps.file.outputs.filename }}
-          path: ${{ steps.file.outputs.filename }}
+          tag_name: release-${{ github.run_number }}
+          name: ${{ github.event.inputs.release_name }}
+          files: ${{ steps.file.outputs.filename }}
