@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       release_name:
-        description: "Release name"
+        description: "title"
         required: true
         type: string
 
@@ -30,7 +30,7 @@ jobs:
           ffmpeg -loglevel error -y -i "${{ github.event.inputs.m3u8_url }}" -c copy -bsf:a aac_adtstoasc output/video.mp4
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.6.0
         with:
           tag_name: release-${{ github.run_number }}
           name: ${{ github.event.inputs.release_name }}
