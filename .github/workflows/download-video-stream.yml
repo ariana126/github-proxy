@@ -1,0 +1,33 @@
+name: Download Video Stream
+
+on:
+  workflow_dispatch:
+    inputs:
+      m3u8_url:
+        description: "M3U8 playlist URL"
+        required: true
+        type: string
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Download stream
+        run: |
+          mkdir output
+          ffmpeg -loglevel error -y -i "${{ github.event.inputs.m3u8_url }}" -c copy -bsf:a aac_adtstoasc output/video.mp4
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: playlist-download
+          path: output/video.mp4

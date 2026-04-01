@@ -1,4 +1,4 @@
-name: Download file
+name: Download File
 
 on:
   workflow_dispatch:
