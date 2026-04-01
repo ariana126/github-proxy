@@ -17,13 +17,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y aria2
 
-      - name: Determine filename
-        id: file
-        run: |
-          URL="${{ inputs.url }}"
-          FILE=$(basename "${URL%%\?*}")
-          echo "filename=$FILE" >> $GITHUB_OUTPUT
-
       - name: Download file with progress
         run: |
           aria2c \
@@ -31,8 +24,13 @@ jobs:
             --file-allocation=none \
             -x16 -s16 -k1M \
             --console-log-level=warn \
-            -o "${{ steps.file.outputs.filename }}" \
             "${{ inputs.url }}"
+
+      - name: Detect downloaded filename
+        id: file
+        run: |
+          FILE=$(ls -t | head -n1)
+          echo "filename=$FILE" >> $GITHUB_OUTPUT
 
       - name: Upload artifact
         uses: actions/upload-artifact@v6
